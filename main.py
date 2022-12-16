@@ -4,11 +4,11 @@ import pandas as pd
 
 
 class Soldier:
-    def __init__(self, excel_row: List[str]):
-        (self.name, self.pref1, self.pref2) = (excel_row[0].strip(), excel_row[1].strip(), excel_row[2].strip())
+    def __init__(self, s: List[str]):
+        (self.name, self.pref1, self.pref2, self.gender) = (s[0].strip(), s[1].strip(), s[2].strip(), s[3].strip())
 
     def __str__(self):
-        return f"{self.name} ({self.pref1}, {self.pref2})"
+        return f"{self.name}, {self.gender} ({self.pref1}, {self.pref2})"
 
 
 class Settlement:
@@ -28,7 +28,8 @@ if __name__ == '__main__':
     soldiers_prefs = []
     for soldier in df.values:
         soldiers_prefs.append(Soldier(soldier))
-
+    for soldier in soldiers_prefs:
+        print(soldier)
     # set settlements and their prioritization:
 
     # yeshuv1 = Settlement('aria', [temp1, temp2])
