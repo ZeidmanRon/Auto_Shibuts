@@ -1,6 +1,6 @@
 import itertools
-from typing import List
 import random
+from typing import List
 
 import pandas as pd
 
@@ -144,13 +144,14 @@ if __name__ == '__main__':
     settlement13 = Settlement(name='אלוני שילה', capacity=2, priority=13, men=True)
     settlement14 = Settlement(name='אל מתן', capacity=3, priority=14, men=False)
     main_settlements = [settlement1, settlement2, settlement3, settlement4, settlement5, settlement6, settlement7,
-                        settlement8, settlement9, settlement10, settlement11, settlement12]
+                        settlement8, settlement9, settlement10, settlement11, settlement12, settlement13]
+    random.shuffle(main_settlements)
 
     my_shibuts = Shibuts(main_settlements, male_soldiers, female_soldiers)
     my_shibuts.calc_all_shibutsim()
     for (key, value) in my_shibuts.settlement_dict.items():
         print(f'settlement: {key}, soldiers: {value}')
-        
+
     print('Done!')
     # most_connected, connections = my_shibuts.find_most_connected_group(5)
     # print(most_connected[0].name + '\n', most_connected[1].name + '\n', most_connected[2].name + '\n',
