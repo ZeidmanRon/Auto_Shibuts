@@ -1,5 +1,6 @@
 import itertools
 from typing import List
+import random
 
 import pandas as pd
 
@@ -46,43 +47,47 @@ class Shibuts:
 
     def remove_settlement_and_soldiers_after_recruited(self, settlement_to_remove: Settlement,
                                                        soldiers_to_remove: List[Soldier]):
-        if settlement_to_remove.men:
-            for s in soldiers_to_remove:
-                for sol in self.available_males:
-                    if s.name == sol.name:
-                        self.available_males.remove(sol)
-        else:
-            for s in soldiers_to_remove:
-                for sol in self.available_females:
-                    if s.name == sol.name:
-                        self.available_females.remove(sol)
-
         for s in self.settlements:
             if s.name == settlement_to_remove.name:
-                self.settlements.remove(s)
+                for sol in soldiers_to_remove:
+                    s.soldiers.append(sol)
+                    if settlement_to_remove.men:
+                        self.available_males.remove(sol)
+                    else:
+                        self.available_females.remove(sol)
+                # self.settlements.remove(s)
 
     def calc_all_shibutsim(self):
-        for settlement in self.settlements:
-            if settlement.men:
-                most_connected, connections = self.find_most_connected_group(settlement.capacity, True)
-                self.settlement_dict[settlement.name] = self.get_names_of_soldiers(
+        # while len(self.settlements) > 0:
+        for i in range(len(self.settlements)):
+            if self.settlements[i].men:
+                most_connected, connections = self.find_most_connected_group(self.settlements[i].capacity, True)
+                self.settlement_dict[self.settlements[i].name] = self.get_names_of_soldiers(
                     most_connected) + f', with {connections} connections.'
             else:
-                most_connected, connections = self.find_most_connected_group(settlement.capacity, False)
-                self.settlement_dict[settlement.name] = self.get_names_of_soldiers(
+                most_connected, connections = self.find_most_connected_group(self.settlements[i].capacity, False)
+                self.settlement_dict[self.settlements[i].name] = self.get_names_of_soldiers(
                     most_connected) + f', with {connections} connections.'
 
-            self.remove_settlement_and_soldiers_after_recruited(settlement_to_remove=settlement,
+            self.remove_settlement_and_soldiers_after_recruited(settlement_to_remove=self.settlements[i],
                                                                 soldiers_to_remove=most_connected)
 
     def find_most_connected_group(self, size: int, is_men: bool) -> (List[Soldier], int):
         group_dict = {}
         if is_men:
-            for subset in itertools.combinations(self.available_males, size):
-                group_dict[subset] = self.calc_connection(subset)
+            if size <= len(self.available_males):
+                for subset in itertools.combinations(self.available_males, size):
+                    group_dict[subset] = self.calc_connection(subset)
+            else:
+                print('no male soldiers left')
+                pass
         else:
-            for subset in itertools.combinations(self.available_females, size):
-                group_dict[subset] = self.calc_connection(subset)
+            if size <= len(self.available_females):
+                for subset in itertools.combinations(self.available_females, size):
+                    group_dict[subset] = self.calc_connection(subset)
+            else:
+                print('no female soldiers left')
+                pass
 
         max_connections = max(group_dict, key=group_dict.get)
         return max_connections, group_dict[max_connections]
@@ -112,10 +117,13 @@ if __name__ == '__main__':
     male_soldiers = []
     female_soldiers = []
     for soldier in all_soldiers:
-        if soldier.gender == 'male':
+        if soldier.gender == 'זכר':
             male_soldiers.append(soldier)
         else:
             female_soldiers.append(soldier)
+
+    random.shuffle(male_soldiers)
+    random.shuffle(female_soldiers)
 
     # for soldier in soldiers_prefs:
     #     print(soldier)
@@ -131,17 +139,19 @@ if __name__ == '__main__':
     settlement8 = Settlement(name='גבעת הרואה', capacity=5, priority=8, men=False)
     settlement9 = Settlement(name='מצפה דני', capacity=4, priority=9, men=False)
     settlement10 = Settlement(name='מגרון', capacity=4, priority=10, men=False)
-    settlement11 = Settlement(name='כרם רעים', capacity=5, priority=10, men=False)
-    settlement12 = Settlement(name='חרשה', capacity=2, priority=10, men=True)
-    settlement13 = Settlement(name='אלוני שילה', capacity=2, priority=10, men=True)
-    settlement14 = Settlement(name='אל מתן', capacity=3, priority=10, men=False)
-    settlements = [settlement1, settlement2, settlement3, settlement4, settlement5, settlement6, settlement7,
-                   settlement8, settlement9, settlement10, settlement11, settlement12, settlement13, settlement14]
+    settlement11 = Settlement(name='כרם רעים', capacity=5, priority=11, men=False)
+    settlement12 = Settlement(name='חרשה', capacity=2, priority=12, men=True)
+    settlement13 = Settlement(name='אלוני שילה', capacity=2, priority=13, men=True)
+    settlement14 = Settlement(name='אל מתן', capacity=3, priority=14, men=False)
+    main_settlements = [settlement1, settlement2, settlement3, settlement4, settlement5, settlement6, settlement7,
+                        settlement8, settlement9, settlement10, settlement11, settlement12]
 
-    my_shibuts = Shibuts(settlements, male_soldiers, female_soldiers)
+    my_shibuts = Shibuts(main_settlements, male_soldiers, female_soldiers)
     my_shibuts.calc_all_shibutsim()
-    for key, value in my_shibuts.settlement_dict:
+    for (key, value) in my_shibuts.settlement_dict.items():
         print(f'settlement: {key}, soldiers: {value}')
+        
+    print('Done!')
     # most_connected, connections = my_shibuts.find_most_connected_group(5)
     # print(most_connected[0].name + '\n', most_connected[1].name + '\n', most_connected[2].name + '\n',
     #       most_connected[3].name + '\n',
