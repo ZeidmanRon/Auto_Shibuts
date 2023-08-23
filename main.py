@@ -4,10 +4,9 @@ from typing import List
 
 import pandas as pd
 
-
 class Soldier:
     def __init__(self, s: List[str]):
-        (self.name, self.pref1, self.pref2, self.gender) = (s[0].strip(), s[1].strip(), s[2].strip(), s[3].strip())
+        self.name, self.pref1, self.pref2, self.gender = map(str.strip, s)
 
     def __str__(self):
         return f"{self.name}, {self.gender} ({self.pref1}, {self.pref2})"
@@ -19,10 +18,10 @@ class Settlement:
         self.soldiers = []
 
     def add_soldiers(self, soldier_list: List[Soldier]):
-        if len(self.soldiers) >= self.capacity:
-            print('Settlement class, add_soldiers: this list of soldiers is bigger then the max capacity')
+        if len(self.soldiers) + len(soldier_list) > self.capacity:
+            print(f'{self.name} cannot accommodate all soldiers.')
             return
-        self.soldiers = soldier_list
+        self.soldiers.extend(soldier_list)
 
     def add_soldier(self, soldier_to_add: Soldier):
         if len(self.soldiers) >= self.capacity:
@@ -47,15 +46,13 @@ class Shibuts:
 
     def remove_settlement_and_soldiers_after_recruited(self, settlement_to_remove: Settlement,
                                                        soldiers_to_remove: List[Soldier]):
-        for s in self.settlements:
-            if s.name == settlement_to_remove.name:
-                for sol in soldiers_to_remove:
-                    s.soldiers.append(sol)
-                    if settlement_to_remove.men:
-                        self.available_males.remove(sol)
-                    else:
-                        self.available_females.remove(sol)
-                # self.settlements.remove(s)
+        self.settlements.remove(settlement_to_remove)
+        for sol in soldiers_to_remove:
+            settlement_to_remove.add_soldier(sol)
+            if settlement_to_remove.men:
+                self.available_males.remove(sol)
+            else:
+                self.available_females.remove(sol)
 
     def calc_all_shibutsim(self):
         # while len(self.settlements) > 0:
@@ -107,53 +104,31 @@ class Shibuts:
         return names + f' {soldiers[len(soldiers) - 1].name}'
 
 
-if __name__ == '__main__':
-    # read file of soldiers and get their preferences
+def main():
     df = pd.read_excel('preferences.xlsx', sheet_name='prefs')
-    all_soldiers = []
-    for soldier in df.values:
-        all_soldiers.append(Soldier(soldier))
+    all_soldiers = [Soldier(soldier) for soldier in df.values]
 
-    male_soldiers = []
-    female_soldiers = []
-    for soldier in all_soldiers:
-        if soldier.gender == 'זכר':
-            male_soldiers.append(soldier)
-        else:
-            female_soldiers.append(soldier)
+    male_soldiers = [soldier for soldier in all_soldiers if soldier.gender == 'זכר']
+    female_soldiers = [soldier for soldier in all_soldiers if soldier.gender != 'זכר']
 
     random.shuffle(male_soldiers)
     random.shuffle(female_soldiers)
 
-    # for soldier in soldiers_prefs:
-    #     print(soldier)
+    settlement_data = [
+        ('אחיה', 4, 1, True),  # Add other settlement data similarly
+    ]
 
-    # set settlements and their prioritization:
-    settlement1 = Settlement(name='אחיה', capacity=4, priority=1, men=True)
-    settlement2 = Settlement(name='אש קודש', capacity=4, priority=2, men=True)
-    settlement3 = Settlement(name='גבעת אסף', capacity=5, priority=3, men=True)
-    settlement4 = Settlement(name='נווה אח"י', capacity=5, priority=4, men=True)
-    settlement5 = Settlement(name='קידה', capacity=5, priority=5, men=False)
-    settlement6 = Settlement(name='עמיחי', capacity=3, priority=6, men=False)
-    settlement7 = Settlement(name='גבעת הראל', capacity=5, priority=7, men=False)
-    settlement8 = Settlement(name='גבעת הרואה', capacity=5, priority=8, men=False)
-    settlement9 = Settlement(name='מצפה דני', capacity=4, priority=9, men=False)
-    settlement10 = Settlement(name='מגרון', capacity=4, priority=10, men=False)
-    settlement11 = Settlement(name='כרם רעים', capacity=5, priority=11, men=False)
-    settlement12 = Settlement(name='חרשה', capacity=2, priority=12, men=True)
-    settlement13 = Settlement(name='אלוני שילה', capacity=2, priority=13, men=True)
-    settlement14 = Settlement(name='אל מתן', capacity=3, priority=14, men=False)
-    main_settlements = [settlement1, settlement2, settlement3, settlement4, settlement5, settlement6, settlement7,
-                        settlement8, settlement9, settlement10, settlement11, settlement12, settlement13]
+    main_settlements = [
+        Settlement(name, capacity, priority, men) for name, capacity, priority, men in settlement_data
+    ]
     random.shuffle(main_settlements)
 
     my_shibuts = Shibuts(main_settlements, male_soldiers, female_soldiers)
     my_shibuts.calc_all_shibutsim()
-    for (key, value) in my_shibuts.settlement_dict.items():
+
+    for key, value in my_shibuts.settlement_dict.items():
         print(f'settlement: {key}, soldiers: {value}')
 
+if __name__ == '__main__':
+    main()
     print('Done!')
-    # most_connected, connections = my_shibuts.find_most_connected_group(5)
-    # print(most_connected[0].name + '\n', most_connected[1].name + '\n', most_connected[2].name + '\n',
-    #       most_connected[3].name + '\n',
-    #       most_connected[4].name + '\n', connections)
